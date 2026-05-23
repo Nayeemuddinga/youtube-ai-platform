@@ -53,7 +53,7 @@ MarkupSafe==3.0.3
 multidict==6.7.1
 openai==2.38.0
 orjson==3.11.9
-packaging @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_packaging_1777103621/work
+packaging>=24.0
 passlib==1.7.4
 propcache==0.5.2
 proto-plus==1.28.0
