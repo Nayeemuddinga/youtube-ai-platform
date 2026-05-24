@@ -1,7 +1,8 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy.sql import func
-from app.db.session import Base
+
+Base = declarative_base()
 
 class User(Base):
     __tablename__ = "users"
@@ -16,7 +17,5 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
-    # TEMPORARILY COMMENTED OUT - causes initialization error
+    # COMMENT OUT or REMOVE this line temporarily:
     # marketing_packages = relationship("MarketingPackage", back_populates="user")
-    # Add this relationship
-marketing_packages = relationship("MarketingPackage", back_populates="user", cascade="all, delete-orphan")
