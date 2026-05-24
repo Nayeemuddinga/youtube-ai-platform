@@ -83,3 +83,13 @@ export function logout() {
 export function isAuthenticated() {
   return getAuthToken() !== null;
 }
+
+export function useAuth() {
+  return {
+    user: {
+      id: 1,
+      name: "Demo User",
+      email: "demo@example.com",
+    },
+  };
+}
