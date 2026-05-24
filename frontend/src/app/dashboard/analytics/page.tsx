@@ -1,103 +1,30 @@
+// frontend/src/app/dashboard/analytics/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
-import {
-  TrendingUp,
-  Package,
-  Image,
-  Users,
-  Clock,
-  Download,
-  RefreshCw,
-} from 'lucide-react';
-import { useAuth } from '@/lib/auth';
 
-// Types
-interface AnalyticsData {
-  totalPackages: number;
-  totalThumbnails: number;
-  totalSeoOptimizations: number;
-  avgSeoScore: number;
-  recentActivity: ActivityItem[];
-  packageTrend: TrendData[];
-  thumbnailTypes: ThumbnailType[];
-}
-
-interface ActivityItem {
-  id: string;
-  type: 'seo' | 'growth' | 'thumbnail';
-  topic: string;
-  timestamp: string;
-  status: 'completed' | 'processing' | 'failed';
-}
-
-interface TrendData {
-  date: string;
-  packages: number;
-}
-
-interface ThumbnailType {
-  name: string;
-  value: number;
-  color: string;
-}
-
-export default function AnalyticsDashboard() {
-  const { user } = useAuth();
-  const [data, setData] = useState<AnalyticsData | null>(null);
+export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
+  const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
-    fetchAnalytics();
-  }, [timeRange]);
+    // Mock data - replace with real API call later
+    const mockStats = {
+      totalGenerations: 12,
+      last7Days: 5,
+      recentActivity: [
+        { id: 1, topic: 'AI for Kids', type: 'Growth Package', created_at: new Date().toISOString() },
+        { id: 2, topic: 'Python Tutorial', type: 'SEO Optimization', created_at: new Date(Date.now() - 86400000).toISOString() },
+      ],
+    };
+    setStats(mockStats);
+    setLoading(false);
+  }, []);
 
-  const fetchAnalytics = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `/api/v1/analytics?range=${timeRange}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
-      
-      if (response.ok) {
-        const result = await response.json();
-        setData(result);
-      }
-    } catch (error) {
-      console.error('Failed to fetch analytics:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
-  if (loading && !data) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
       </div>
     );
   }
@@ -105,222 +32,83 @@ export default function AnalyticsDashboard() {
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h1>
-          <p className="text-muted-foreground">
-            Track your content performance and AI-generated assets
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value as any)}
-            className="px-3 py-2 border rounded-md bg-background"
-          >
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
-          </select>
-          <Button variant="outline" size="icon" onClick={fetchAnalytics}>
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h1>
+        <p className="text-gray-500">Track your content growth and usage stats.</p>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Total Packages"
-          value={data?.totalPackages || 0}
-          icon={Package}
-          trend="+12%"
-        />
-        <MetricCard
-          title="Thumbnails Generated"
-          value={data?.totalThumbnails || 0}
-          icon={Image}
-          trend="+24%"
-        />
-        <MetricCard
-          title="SEO Optimizations"
-          value={data?.totalSeoOptimizations || 0}
-          icon={TrendingUp}
-          trend="+8%"
-        />
-        <MetricCard
-          title="Avg SEO Score"
-          value={`${data?.avgSeoScore || 0}/100`}
-          icon={Users}
-          trend="+5 pts"
-        />
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Package Trend Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Packages Generated Over Time</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data?.packageTrend || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="packages"
-                  stroke="#8884d8"
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Thumbnail Types Pie Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Thumbnail Style Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={data?.thumbnailTypes || []}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {(data?.thumbnailTypes || []).map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex justify-center gap-4 mt-4">
-              {(data?.thumbnailTypes || []).map((type, index) => (
-                <div key={type.name} className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  />
-                  <span className="text-sm">{type.name}</span>
-                </div>
-              ))}
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {/* Total Generations */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Total Generations</p>
+              <p className="text-2xl font-bold mt-1">{stats?.totalGenerations || 0}</p>
+              <p className="text-xs text-green-600 mt-1">+12% from last month</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
+              <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Last 7 Days */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Last 7 Days</p>
+              <p className="text-2xl font-bold mt-1">{stats?.last7Days || 0}</p>
+              <p className="text-xs text-green-600 mt-1">+3 new this week</p>
+            </div>
+            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
+              <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Status */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Status</p>
+              <p className="text-2xl font-bold mt-1 text-green-600">Active</p>
+              <p className="text-xs text-gray-500 mt-1">All systems operational</p>
+            </div>
+            <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
+              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
+        {stats?.recentActivity?.length > 0 ? (
           <div className="space-y-4">
-            {(data?.recentActivity || []).map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition"
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`p-2 rounded-full ${
-                      activity.type === 'seo'
-                        ? 'bg-blue-100 text-blue-600'
-                        : activity.type === 'growth'
-                        ? 'bg-purple-100 text-purple-600'
-                        : 'bg-green-100 text-green-600'
-                    }`}
-                  >
-                    {activity.type === 'seo' ? (
-                      <TrendingUp className="h-4 w-4" />
-                    ) : activity.type === 'growth' ? (
-                      <Package className="h-4 w-4" />
-                    ) : (
-                      <Image className="h-4 w-4" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium capitalize">
-                      {activity.type} optimization
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {activity.topic}
-                    </p>
-                  </div>
+            {stats.recentActivity.map((item: any) => (
+              <div key={item.id} className="flex items-center justify-between border-b pb-4 last:border-0">
+                <div className="space-y-1">
+                  <p className="font-medium">{item.topic}</p>
+                  <p className="text-sm text-gray-500">{item.type}</p>
                 </div>
-                <div className="flex items-center gap-4">
-                  <Badge
-                    variant={
-                      activity.status === 'completed'
-                        ? 'default'
-                        : activity.status === 'processing'
-                        ? 'secondary'
-                        : 'destructive'
-                    }
-                  >
-                    {activity.status}
-                  </Badge>
-                  <span className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {new Date(activity.timestamp).toLocaleDateString()}
-                  </span>
+                <div className="text-sm text-gray-500">
+                  {new Date(item.created_at).toLocaleDateString()}
                 </div>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        ) : (
+          <p className="text-gray-500">No recent activity.</p>
+        )}
+      </div>
     </div>
-  );
-}
-
-// Metric Card Component
-function MetricCard({
-  title,
-  value,
-  icon: Icon,
-  trend,
-}: {
-  title: string;
-  value: number | string;
-  icon: any;
-  trend: string;
-}) {
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold mt-1">{value}</p>
-            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
-              {trend}
-            </p>
-          </div>
-          <div className="p-3 bg-primary/10 rounded-full">
-            <Icon className="h-6 w-6 text-primary" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
