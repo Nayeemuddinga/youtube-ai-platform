@@ -365,8 +365,8 @@ export default function YoutubeGrowthAgent() {
                 <p className="text-sm text-gray-500 mb-2">Best Title</p>
                 <div className="p-3 bg-gray-50 rounded-lg flex justify-between items-start">
                   <div>
-                    <p className="font-medium">{result.data.seo.titles[0]?.title}</p>
-                    <p className="text-xs text-gray-500 mt-1">Score: {result.data.seo.titles[0]?.score}/10 • {result.data.seo.titles[0]?.reason}</p>
+                    <p className="font-medium">{result.data?.seo?.titles?.[0]?.title}</p>
+                    <p className="text-xs text-gray-500 mt-1">Score: {result.data?.seo?.titles?.[0]?.score}/10 • {result.data.seo.titles[0]?.reason}</p>
                   </div>
                   <button onClick={() => copyToClipboard(result.data?.seo?.titles?.[0]?.title ?? '', 'title')} className="p-1.5 hover:bg-gray-200 rounded">
                     {copied === 'title' ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
