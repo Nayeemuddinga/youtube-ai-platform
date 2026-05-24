@@ -1,8 +1,7 @@
-node_modules/
+node_modules
+.next
 .env
+__pycache__
 *.pyc
-__pycache__/
-venv/
-dist/
-.next/
-youtube_ai.db  <-- Don't upload local SQLite DB
+dist
+build

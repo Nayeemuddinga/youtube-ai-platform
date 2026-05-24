@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from slowapi.errors import RateLimitExceeded
-
 from app.config import get_settings
 from app.api import router
 from app.middleware.rate_limiter import limiter, rate_limit_handler
@@ -13,59 +12,29 @@ import logging
 logging.basicConfig(level=logging.INFO, format='{"time":"%(asctime)s","level":"%(levelname)s","msg":"%(message)s"}')
 settings = get_settings()
 
-# In app/main.py, inside the lifespan function:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger = logging.getLogger(__name__)
     logger.info("🚀 Starting YouTube AI Platform...")
-    
-    # Debug: Print environment variables (first 50 chars only)
-    from app.config import get_settings
-    settings = get_settings()
-    logger.info(f"🔧 DATABASE_URL: {settings.DATABASE_URL[:50] if settings.DATABASE_URL else 'None'}...")
-    logger.info(f"🔧 REDIS_URL: {settings.REDIS_URL[:50] if settings.REDIS_URL else 'None'}...")
-    logger.info(f"🔧 GROQ_API_KEY: {'***' + settings.GROQ_API_KEY[-4:] if settings.GROQ_API_KEY else 'None'}")
-    
-    # Init DB and cache
     init_db()
     if not await cache_service.health_check():
         logger.warning("⚠️ Redis unavailable - caching disabled")
-    
     logger.info("✅ Application ready")
     yield
-    await cache_service.close()
+    await cache_service.redis.close()
     logger.info("👋 Application shutdown complete")
 
-app = FastAPI(title="LearningWithAhad Growth Platform", version="1.0.0", lifespan=lifespan)
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Rate limiting
+app = FastAPI(title="YouTube AI Platform", version="0.4.0", lifespan=lifespan)
+app.add_middleware(CORSMiddleware, allow_origins=settings.CORS_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
-
-# Include API routers
 app.include_router(router)
 
-# Health check
 @app.get("/health")
 async def health_check():
     redis_ok = await cache_service.health_check()
-    return {
-        "status": "healthy",
-        "version": "1.0.0",
-        "services": {"redis": "connected" if redis_ok else "disconnected"},
-        "cache_stats": cache_service.get_stats()
-    }
+    return {"status": "healthy", "version": "0.4.0", "services": {"redis": "connected" if redis_ok else "disconnected"}, "cache_stats": cache_service.get_stats()}
 
-# Cache metrics
 @app.get("/metrics/cache")
 async def cache_metrics():
     return cache_service.get_stats()
