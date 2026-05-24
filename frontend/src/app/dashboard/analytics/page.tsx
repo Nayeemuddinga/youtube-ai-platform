@@ -1,10 +1,10 @@
+// frontend/src/app/dashboard/analytics/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/auth';
+import { useAuth } from '@/lib/api';
 
 export default function AnalyticsPage() {
-  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
 
