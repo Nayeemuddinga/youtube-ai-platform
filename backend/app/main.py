@@ -13,16 +13,27 @@ import logging
 logging.basicConfig(level=logging.INFO, format='{"time":"%(asctime)s","level":"%(levelname)s","msg":"%(message)s"}')
 settings = get_settings()
 
+# In app/main.py, inside the lifespan function:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger = logging.getLogger(__name__)
     logger.info("🚀 Starting YouTube AI Platform...")
+    
+    # Debug: Print environment variables (first 50 chars only)
+    from app.config import get_settings
+    settings = get_settings()
+    logger.info(f"🔧 DATABASE_URL: {settings.DATABASE_URL[:50] if settings.DATABASE_URL else 'None'}...")
+    logger.info(f"🔧 REDIS_URL: {settings.REDIS_URL[:50] if settings.REDIS_URL else 'None'}...")
+    logger.info(f"🔧 GROQ_API_KEY: {'***' + settings.GROQ_API_KEY[-4:] if settings.GROQ_API_KEY else 'None'}")
+    
+    # Init DB and cache
     init_db()
     if not await cache_service.health_check():
         logger.warning("⚠️ Redis unavailable - caching disabled")
+    
     logger.info("✅ Application ready")
     yield
-    await cache_service.redis.close()
+    await cache_service.close()
     logger.info("👋 Application shutdown complete")
 
 app = FastAPI(title="LearningWithAhad Growth Platform", version="1.0.0", lifespan=lifespan)
