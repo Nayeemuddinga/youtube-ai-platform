@@ -1,11 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { login, register, getUser } from "@/lib/api";
 import { Loader2, Eye, EyeOff, Sparkles, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
-export default function Login() {
+// Separate component that uses useSearchParams (must be client component)
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLogin, setIsLogin] = useState(!searchParams.get("register"));
@@ -19,7 +20,6 @@ export default function Login() {
     fullName: "",
   });
 
-  // Redirect if already logged in
   useEffect(() => {
     if (getUser()) {
       router.push("/");
@@ -33,36 +33,26 @@ export default function Login() {
     
     try {
       if (isLogin) {
-        // Login: Call the direct function from lib/api
         const response = await login(formData.email.trim(), formData.password);
-        
-        // Store auth data
         localStorage.setItem("access_token", response.access_token);
         localStorage.setItem("refresh_token", response.refresh_token);
         localStorage.setItem("user", JSON.stringify(response.user));
-        
         toast.success("✅ Logged in successfully!");
         router.push("/");
         router.refresh();
-        
       } else {
-        // Register: Call the direct function from lib/api
         await register(
           formData.email.trim(),
           formData.password,
           formData.username.trim() || undefined,
           formData.fullName.trim() || undefined
         );
-        
         toast.success("✅ Account created! Please login.");
         setIsLogin(true);
         setFormData({ email: "", username: "", password: "", fullName: "" });
       }
-      
     } catch (err: any) {
       console.error("Auth error:", err);
-      
-      // Extract meaningful error message
       let errorMsg = isLogin ? "Login failed" : "Registration failed";
       if (err.response?.data?.detail) {
         const detail = err.response.data.detail;
@@ -70,10 +60,8 @@ export default function Login() {
       } else if (err.message) {
         errorMsg = err.message;
       }
-      
       setError(String(errorMsg).slice(0, 300));
       toast.error(errorMsg);
-      
     } finally {
       setLoading(false);
     }
@@ -82,7 +70,6 @@ export default function Login() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-purple-50 to-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
             <div className="p-2 bg-purple-100 rounded-lg">
@@ -95,10 +82,8 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Registration-only fields */}
             {!isLogin && (
               <>
                 <div>
@@ -124,7 +109,6 @@ export default function Login() {
               </>
             )}
             
-            {/* Email field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
               <input
@@ -137,7 +121,6 @@ export default function Login() {
               />
             </div>
             
-            {/* Password field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
               <div className="relative">
@@ -161,7 +144,6 @@ export default function Login() {
               {!isLogin && <p className="text-xs text-gray-500 mt-1">Min 8 characters with uppercase, lowercase, and number</p>}
             </div>
             
-            {/* Error display */}
             {error && (
               <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
@@ -169,7 +151,6 @@ export default function Login() {
               </div>
             )}
             
-            {/* Submit button */}
             <button
               type="submit"
               disabled={loading || !formData.email || !formData.password}
@@ -183,7 +164,6 @@ export default function Login() {
             </button>
           </form>
           
-          {/* Toggle login/register */}
           <div className="mt-6 pt-6 border-t border-gray-100 text-center">
             <button
               type="button"
@@ -204,5 +184,18 @@ export default function Login() {
         </p>
       </div>
     </main>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function Login() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-50 to-white">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
