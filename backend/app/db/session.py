@@ -1,3 +1,6 @@
+"""
+Database Session Management
+"""
 import os
 import logging
 from sqlalchemy import create_engine
@@ -8,39 +11,38 @@ logger = logging.getLogger(__name__)
 # Get DATABASE_URL with fallbacks
 DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("DATABASE_DIRECT_URL")
 
-# Fallback to SQLite for local development if no PostgreSQL URL
+# Fallback to SQLite for local development
 if not DATABASE_URL:
     logger.warning("⚠️ DATABASE_URL not found, using SQLite fallback")
     DATABASE_URL = "sqlite:///./youtube_ai.db"
 
-# Fix Railway URL format: postgres:// → postgresql://
+# Fix Railway URL format
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    logger.info("✅ Fixed DATABASE_URL format for SQLAlchemy")
 
-# Add SSL mode for production (Railway requires this)
+# Add SSL mode for production
 if DATABASE_URL.startswith("postgresql://") and "sslmode" not in DATABASE_URL:
     separator = "?" if "?" not in DATABASE_URL else "&"
     DATABASE_URL += f"{separator}sslmode=require"
-    logger.info("✅ Added sslmode=require to DATABASE_URL")
 
 logger.info(f"🔗 Connecting to database: {DATABASE_URL[:50]}...")
 
-# Create engine with production-safe settings
-connect_args = {}
-if DATABASE_URL.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
-
+# Create engine
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 engine = create_engine(
     DATABASE_URL,
     connect_args=connect_args,
-    pool_pre_ping=True,  # Handle connection drops
+    pool_pre_ping=True,
     pool_size=5,
     max_overflow=10
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+# Import ALL models here to ensure they're registered with Base
+from app.models.user import User
+from app.models.marketing_package import MarketingPackage
 
 def get_db():
     """Dependency for FastAPI routes"""
@@ -52,7 +54,5 @@ def get_db():
 
 def init_db():
     """Create tables - call on startup"""
-    from app.models.user import User
-    from app.models.marketing_package import MarketingPackage
     Base.metadata.create_all(bind=engine)
     logger.info("✅ Database tables initialized")
