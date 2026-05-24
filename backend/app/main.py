@@ -7,6 +7,7 @@ from app.api import router
 from app.middleware.rate_limiter import limiter, rate_limit_handler
 from app.services.cache_service import cache_service
 from app.db.session import init_db
+from app.api.v1.api import api_router
 import logging
 
 logging.basicConfig(level=logging.INFO, format='{"time":"%(asctime)s","level":"%(levelname)s","msg":"%(message)s"}')
@@ -28,7 +29,7 @@ app = FastAPI(title="YouTube AI Platform", version="0.4.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=settings.CORS_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
-app.include_router(router)
+app.include_router(api_router, prefix="/api/v1")
 
 @app.get("/health")
 async def health_check():
