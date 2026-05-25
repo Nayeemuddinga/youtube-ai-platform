@@ -67,7 +67,7 @@ export async function login(
   params.append("password", password);
 
   const res = await api.post(
-    "/api/v1/auth/auth/login",
+    "/api/v1/auth/login",
     params,
     {
       headers: {
@@ -106,7 +106,7 @@ export async function register(
   full_name?: string
 ) {
   const res = await api.post(
-    "/api/v1/auth/auth/register",
+    "/api/v1/auth/register",
     {
       email,
       password,
