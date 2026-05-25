@@ -29,37 +29,41 @@ export default function Home() {
     }
   }, [router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleSubmit = async (
+  e: React.FormEvent
+) => {
+  e.preventDefault();
+
+  try {
     setLoading(true);
-    setError(null);
-    setResult(null);
-    
-    try {
-      const response = await generateSEO(
-        topic.trim(), 
-        audience.trim(), 
-        keyPoints.split("\n").map(k => k.trim()).filter(k => k)
-      );
-      
-      setResult(response);
-      toast.success("✨ SEO optimized successfully!");
-      
-    } catch (err: any) {
-      console.error("SEO generation error:", err);
-      let errorMsg = "Failed to generate SEO";
-      if (err.response?.data?.detail) {
-        const detail = err.response.data.detail;
-        errorMsg = typeof detail === "string" ? detail : JSON.stringify(detail);
-      } else if (err.message) {
-        errorMsg = err.message;
-      }
-      setError(String(errorMsg).slice(0, 300));
-      toast.error(errorMsg);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setError("");
+
+    // LOGIN API
+    const data = await login(
+      email,
+      password
+    );
+
+    console.log(
+      "LOGIN SUCCESS:",
+      data
+    );
+
+    // REDIRECT TO DASHBOARD
+    window.location.href =
+      "/dashboard";
+
+  } catch (err: any) {
+    console.error(err);
+
+    setError(
+      err?.response?.data?.detail ||
+      "Login failed"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleLogout = () => {
     logout();
