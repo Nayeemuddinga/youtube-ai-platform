@@ -16,7 +16,9 @@ export default function HomePage() {
   // =========================
 
   const [user, setUser] =
-    useState<any>(null);
+  useState<any | undefined>(
+    undefined
+  );
 
   const [topic, setTopic] =
     useState('');
@@ -110,7 +112,7 @@ export default function HomePage() {
   // LOADING SCREEN
   // =========================
 
-  if (!user) {
+  if (user === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
