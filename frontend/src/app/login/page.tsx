@@ -6,52 +6,17 @@ import { useRouter } from 'next/navigation';
 import {
   generateSEO,
   logout,
-  getUser,
 } from '@/lib/api';
-
-import {
-  Sparkles,
-  Loader2,
-  Copy,
-  LogOut,
-  BarChart3,
-  FileText,
-  Hash,
-  Wand2,
-  PlayCircle,
-} from 'lucide-react';
-
-// ======================================================
-// TYPES
-// ======================================================
-
-type SEOResult = {
-  seo_title?: string;
-  seo_description?: string;
-  keywords?: string[];
-  hashtags?: string[];
-};
-
-// ======================================================
-// PAGE
-// ======================================================
 
 export default function HomePage() {
   const router = useRouter();
 
-  // ======================================================
-  // AUTH
-  // ======================================================
-
-  const [mounted, setMounted] =
-    useState(false);
+  // =========================
+  // STATE
+  // =========================
 
   const [user, setUser] =
     useState<any>(null);
-
-  // ======================================================
-  // FORM
-  // ======================================================
 
   const [topic, setTopic] =
     useState('');
@@ -59,57 +24,57 @@ export default function HomePage() {
   const [audience, setAudience] =
     useState('');
 
-  const [keyPoints, setKeyPoints] =
-    useState('');
-
-  // ======================================================
-  // RESULT
-  // ======================================================
-
   const [loading, setLoading] =
     useState(false);
 
   const [result, setResult] =
-    useState<SEOResult | null>(
-      null
-    );
+    useState<any>(null);
 
-  const [error, setError] =
-    useState('');
-
-  const [copied, setCopied] =
-    useState('');
-
-  // ======================================================
+  // =========================
   // AUTH CHECK
-  // ======================================================
+  // =========================
 
   useEffect(() => {
-    setMounted(true);
-
-    const storedUser =
-      getUser();
-
-    if (!storedUser) {
-      router.push('/login');
+    if (
+      typeof window === 'undefined'
+    ) {
       return;
     }
 
-    setUser(storedUser);
+    const token =
+      localStorage.getItem(
+        'access_token'
+      );
+
+    const userData =
+      localStorage.getItem('user');
+
+    // NOT LOGGED IN
+    if (!token || !userData) {
+      router.replace('/login');
+      return;
+    }
+
+    try {
+      const parsedUser =
+        JSON.parse(userData);
+
+      setUser(parsedUser);
+
+    } catch (err) {
+
+      console.error(err);
+
+      localStorage.clear();
+
+      router.replace('/login');
+    }
 
   }, [router]);
 
-  // ======================================================
-  // HYDRATION FIX
-  // ======================================================
-
-  if (!mounted) {
-    return null;
-  }
-
-  // ======================================================
+  // =========================
   // GENERATE SEO
-  // ======================================================
+  // =========================
 
   const handleGenerate =
     async () => {
@@ -118,32 +83,21 @@ export default function HomePage() {
 
       setLoading(true);
 
-      setError('');
-
-      const parsedKeyPoints =
-        keyPoints
-          .split(',')
-          .map((k) =>
-            k.trim()
-          )
-          .filter(Boolean);
-
-      const res =
+      const response =
         await generateSEO(
           topic,
           audience,
-          parsedKeyPoints
+          []
         );
 
-      setResult(res);
+      setResult(response);
 
-    } catch (err: any) {
+    } catch (err) {
 
       console.error(err);
 
-      setError(
-        err?.response?.data?.detail ||
-          'Failed to generate SEO'
+      alert(
+        'SEO generation failed'
       );
 
     } finally {
@@ -152,139 +106,77 @@ export default function HomePage() {
     }
   };
 
-  // ======================================================
-  // COPY
-  // ======================================================
-
-  const handleCopy =
-    async (
-      text: string,
-      type: string
-    ) => {
-
-    try {
-
-      await navigator.clipboard.writeText(
-        text
-      );
-
-      setCopied(type);
-
-      setTimeout(() => {
-        setCopied('');
-      }, 2000);
-
-    } catch (err) {
-
-      console.error(err);
-    }
-  };
-
-  // ======================================================
+  // =========================
   // LOADING SCREEN
-  // ======================================================
+  // =========================
 
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <Loader2 className="h-12 w-12 animate-spin text-purple-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
       </div>
     );
   }
 
-  // ======================================================
-  // UI
-  // ======================================================
+  // =========================
+  // PAGE
+  // =========================
 
   return (
-    <main className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100">
 
-      {/* ======================================================
-          HEADER
-      ====================================================== */}
+      {/* HEADER */}
 
-      <header className="bg-white border-b shadow-sm sticky top-0 z-50">
+      <header className="bg-white border-b shadow-sm">
 
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
 
-          {/* LEFT */}
+          <div>
 
-          <div className="flex items-center gap-4">
+            <h1 className="text-4xl font-bold text-gray-900">
+              YouTube SEO Studio
+            </h1>
 
-            <div className="bg-purple-100 p-3 rounded-xl">
-              <PlayCircle className="h-7 w-7 text-purple-600" />
-            </div>
-
-            <div>
-
-              <h1 className="text-3xl font-bold text-gray-900">
-                YouTube SEO Studio
-              </h1>
-
-              <p className="text-gray-500">
-                Welcome{' '}
-                <span className="font-medium">
-                  {
-                    user?.full_name ||
-                    user?.username ||
-                    user?.email ||
-                    'User'
-                  }
-                </span>
-              </p>
-
-            </div>
+            <p className="text-gray-500 mt-1">
+              Welcome{' '}
+              {
+                user?.full_name ||
+                user?.username ||
+                user?.email ||
+                'User'
+              }
+            </p>
 
           </div>
 
-          {/* RIGHT */}
-
           <button
             onClick={logout}
-            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-xl transition"
+            className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg transition"
           >
-            <LogOut className="h-5 w-5" />
             Logout
           </button>
 
         </div>
+
       </header>
 
-      {/* ======================================================
-          BODY
-      ====================================================== */}
+      {/* MAIN */}
 
-      <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <main className="max-w-5xl mx-auto p-8">
 
-        {/* ======================================================
-            LEFT PANEL
-        ====================================================== */}
+        <div className="bg-white rounded-2xl shadow-lg p-8">
 
-        <div className="lg:col-span-1">
+          <h2 className="text-3xl font-bold mb-8">
+            Generate SEO
+          </h2>
 
-          <div className="bg-white rounded-3xl shadow-sm border p-8 sticky top-28">
+          {/* FORM */}
 
-            <div className="flex items-center gap-3 mb-8">
-
-              <Sparkles className="h-8 w-8 text-purple-600" />
-
-              <div>
-
-                <h2 className="text-2xl font-bold">
-                  Generate SEO
-                </h2>
-
-                <p className="text-gray-500">
-                  AI-powered YouTube optimization
-                </p>
-
-              </div>
-
-            </div>
+          <div className="space-y-6">
 
             {/* TOPIC */}
 
-            <div className="mb-6">
+            <div>
 
               <label className="block text-sm font-medium mb-2">
                 Video Topic
@@ -299,14 +191,14 @@ export default function HomePage() {
                     e.target.value
                   )
                 }
-                className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full border border-gray-300 rounded-xl px-4 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
 
             </div>
 
             {/* AUDIENCE */}
 
-            <div className="mb-6">
+            <div>
 
               <label className="block text-sm font-medium mb-2">
                 Target Audience
@@ -321,44 +213,10 @@ export default function HomePage() {
                     e.target.value
                   )
                 }
-                className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full border border-gray-300 rounded-xl px-4 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
 
             </div>
-
-            {/* KEY POINTS */}
-
-            <div className="mb-6">
-
-              <label className="block text-sm font-medium mb-2">
-                Key Points
-              </label>
-
-              <textarea
-                placeholder="SEO, thumbnails, retention, hooks"
-                rows={5}
-                value={keyPoints}
-                onChange={(e) =>
-                  setKeyPoints(
-                    e.target.value
-                  )
-                }
-                className="w-full border border-gray-300 rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-purple-500"
-              />
-
-              <p className="text-xs text-gray-400 mt-2">
-                Separate with commas
-              </p>
-
-            </div>
-
-            {/* ERROR */}
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 rounded-2xl p-4 mb-6">
-                {error}
-              </div>
-            )}
 
             {/* BUTTON */}
 
@@ -369,189 +227,108 @@ export default function HomePage() {
                 !topic ||
                 !audience
               }
-              className="w-full bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:opacity-90 disabled:opacity-50 text-white py-4 rounded-2xl font-semibold text-lg transition flex items-center justify-center gap-3"
+              className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-8 py-4 rounded-xl text-lg transition"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Wand2 className="h-5 w-5" />
-                  Generate SEO
-                </>
-              )}
+              {
+                loading
+                  ? 'Generating...'
+                  : 'Generate SEO'
+              }
             </button>
 
           </div>
-        </div>
 
-        {/* ======================================================
-            RIGHT PANEL
-        ====================================================== */}
+          {/* RESULTS */}
 
-        <div className="lg:col-span-2">
+          {result && (
 
-          {!result ? (
+            <div className="mt-10 border-t pt-8">
 
-            <div className="bg-white rounded-3xl shadow-sm border p-16 flex flex-col items-center justify-center text-center">
-
-              <div className="bg-purple-100 p-6 rounded-full mb-6">
-                <BarChart3 className="h-16 w-16 text-purple-600" />
-              </div>
-
-              <h3 className="text-3xl font-bold mb-4">
-                Generate Your SEO Package
+              <h3 className="text-2xl font-bold mb-6">
+                SEO Results
               </h3>
-
-              <p className="text-gray-500 max-w-xl">
-                Create titles, descriptions,
-                keywords, hashtags, and YouTube SEO
-                strategies using AI.
-              </p>
-
-            </div>
-
-          ) : (
-
-            <div className="space-y-6">
 
               {/* TITLE */}
 
-              <div className="bg-white rounded-3xl shadow-sm border p-8">
+              <div className="mb-8">
 
-                <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold mb-2">
+                  SEO Title
+                </h4>
 
-                  <div className="flex items-center gap-3">
-
-                    <FileText className="h-6 w-6 text-purple-600" />
-
-                    <h3 className="text-2xl font-bold">
-                      SEO Title
-                    </h3>
-
-                  </div>
-
-                  <button
-                    onClick={() =>
-                      handleCopy(
-                        result.seo_title || '',
-                        'title'
-                      )
-                    }
-                  >
-                    <Copy className="h-5 w-5 text-gray-500 hover:text-black" />
-                  </button>
-
+                <div className="bg-gray-50 border rounded-xl p-4">
+                  {
+                    result?.seo_title ||
+                    'No title generated'
+                  }
                 </div>
-
-                <p className="text-lg">
-                  {result.seo_title}
-                </p>
 
               </div>
 
               {/* DESCRIPTION */}
 
-              <div className="bg-white rounded-3xl shadow-sm border p-8">
+              <div className="mb-8">
 
-                <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold mb-2">
+                  Description
+                </h4>
 
-                  <div className="flex items-center gap-3">
-
-                    <FileText className="h-6 w-6 text-purple-600" />
-
-                    <h3 className="text-2xl font-bold">
-                      Description
-                    </h3>
-
-                  </div>
-
-                  <button
-                    onClick={() =>
-                      handleCopy(
-                        result.seo_description || '',
-                        'description'
-                      )
-                    }
-                  >
-                    <Copy className="h-5 w-5 text-gray-500 hover:text-black" />
-                  </button>
-
+                <div className="bg-gray-50 border rounded-xl p-4 whitespace-pre-wrap">
+                  {
+                    result?.seo_description ||
+                    'No description generated'
+                  }
                 </div>
-
-                <p className="whitespace-pre-wrap">
-                  {result.seo_description}
-                </p>
 
               </div>
 
               {/* KEYWORDS */}
 
-              <div className="bg-white rounded-3xl shadow-sm border p-8">
+              <div className="mb-8">
 
-                <div className="flex items-center gap-3 mb-6">
+                <h4 className="text-lg font-semibold mb-3">
+                  Keywords
+                </h4>
 
-                  <Hash className="h-6 w-6 text-purple-600" />
+                <div className="flex flex-wrap gap-2">
 
-                  <h3 className="text-2xl font-bold">
-                    Keywords
-                  </h3>
-
-                </div>
-
-                <div className="flex flex-wrap gap-3">
-
-                  {result.keywords?.map(
-                    (
-                      keyword,
-                      index
-                    ) => (
-                      <span
-                        key={index}
-                        className="bg-purple-100 text-purple-700 px-4 py-2 rounded-full font-medium"
-                      >
-                        {keyword}
-                      </span>
+                  {
+                    result?.keywords?.map(
+                      (
+                        keyword: string,
+                        index: number
+                      ) => (
+                        <span
+                          key={index}
+                          className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm"
+                        >
+                          {keyword}
+                        </span>
+                      )
                     )
-                  )}
+                  }
 
                 </div>
 
               </div>
 
-              {/* HASHTAGS */}
+              {/* RAW JSON */}
 
-              <div className="bg-white rounded-3xl shadow-sm border p-8">
+              <div>
 
-                <div className="flex items-center gap-3 mb-6">
+                <h4 className="text-lg font-semibold mb-3">
+                  Full Response
+                </h4>
 
-                  <Hash className="h-6 w-6 text-purple-600" />
-
-                  <h3 className="text-2xl font-bold">
-                    Hashtags
-                  </h3>
-
-                </div>
-
-                <div className="flex flex-wrap gap-3">
-
-                  {result.hashtags?.map(
-                    (
-                      hashtag,
-                      index
-                    ) => (
-                      <span
-                        key={index}
-                        className="bg-gray-100 px-4 py-2 rounded-full"
-                      >
-                        #{hashtag}
-                      </span>
+                <pre className="bg-black text-green-400 rounded-xl p-6 overflow-auto text-sm">
+                  {
+                    JSON.stringify(
+                      result,
+                      null,
+                      2
                     )
-                  )}
-
-                </div>
+                  }
+                </pre>
 
               </div>
 
@@ -561,7 +338,8 @@ export default function HomePage() {
 
         </div>
 
-      </div>
-    </main>
+      </main>
+
+    </div>
   );
 }
