@@ -39,14 +39,14 @@ export async function login(username: string, password: string) {
   params.append("username", username);
   params.append("password", password);
   
-  const res = await api.post("/api/v1/auth/login", params, {
+  const res = await api.post("/api/v1/auth/auth/login", params, {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
   });
   return res.data;
 }
 
 export async function register(email: string, password: string, username?: string, full_name?: string) {
-  const res = await api.post("/api/v1/auth/register", {
+  const res = await api.post("/api/v1/auth/auth/register", {
     email, password, username, full_name
   });
   return res.data;
