@@ -18,4 +18,4 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # ⚠️ COMMENT OUT THIS LINE - causes the error
-    # marketing_packages = relationship("MarketingPackage", back_populates="user")
+marketing_packages = relationship("MarketingPackage", back_populates="user")
