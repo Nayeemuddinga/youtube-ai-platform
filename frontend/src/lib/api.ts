@@ -1,6 +1,7 @@
 import axios from "axios";
 
-// API URL
+// ==================== API CONFIG ====================
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://youtube-ai-platform-production.up.railway.app";
@@ -14,12 +15,14 @@ export const api = axios.create({
   timeout: 30000,
 });
 
-// REQUEST INTERCEPTOR
+// ==================== REQUEST INTERCEPTOR ====================
+
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token =
       localStorage.getItem("access_token");
 
+    // Skip auth routes
     if (
       token &&
       !config.url?.includes("/auth/")
@@ -32,7 +35,8 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// RESPONSE INTERCEPTOR
+// ==================== RESPONSE INTERCEPTOR ====================
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -41,6 +45,7 @@ api.interceptors.response.use(
       error?.response || error
     );
 
+    // Auto logout on 401
     if (
       error.response?.status === 401 &&
       typeof window !== "undefined"
@@ -61,6 +66,8 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// ==================== AUTH FUNCTIONS ====================
 
 // LOGIN
 export async function login(
@@ -84,7 +91,7 @@ export async function login(
     }
   );
 
-  // SAVE TOKENS
+  // Save auth data
   if (typeof window !== "undefined") {
     localStorage.setItem(
       "access_token",
@@ -125,7 +132,27 @@ export async function register(
   return res.data;
 }
 
-// AUTH UTILS
+// ==================== SEO FUNCTIONS ====================
+
+export async function generateSEO(
+  topic: string,
+  target_audience: string,
+  key_points: string[] = []
+) {
+  const res = await api.post(
+    "/api/v1/seo/optimize",
+    {
+      topic,
+      target_audience,
+      key_points,
+    }
+  );
+
+  return res.data;
+}
+
+// ==================== AUTH UTILS ====================
+
 export function getAuthToken() {
   if (typeof window === "undefined") {
     return null;
@@ -152,7 +179,15 @@ export function logout() {
     return;
   }
 
-  localStorage.clear();
+  localStorage.removeItem(
+    "access_token"
+  );
+
+  localStorage.removeItem(
+    "refresh_token"
+  );
+
+  localStorage.removeItem("user");
 
   window.location.href = "/login";
 }
@@ -160,6 +195,8 @@ export function logout() {
 export function isAuthenticated() {
   return !!getAuthToken();
 }
+
+// ==================== AUTH HOOK ====================
 
 export function useAuth() {
   return {
