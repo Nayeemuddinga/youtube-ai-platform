@@ -1,200 +1,461 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { login, register, getUser } from "@/lib/api";
-import { Loader2, Eye, EyeOff, Sparkles, AlertCircle } from "lucide-react";
+
+import {
+  useState,
+  useEffect,
+  Suspense,
+} from "react";
+
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+
+import {
+  login,
+  register,
+} from "@/lib/api";
+
+import {
+  Loader2,
+  Eye,
+  EyeOff,
+  Sparkles,
+  AlertCircle,
+} from "lucide-react";
+
 import toast from "react-hot-toast";
 
-// Separate component that uses useSearchParams (must be client component)
+// =========================
+// LOGIN FORM COMPONENT
+// =========================
+
 function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isLogin, setIsLogin] = useState(!searchParams.get("register"));
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    email: "",
-    username: "",
-    password: "",
-    fullName: "",
-  });
+
+  const searchParams =
+    useSearchParams();
+
+  const [isLogin, setIsLogin] =
+    useState(
+      !searchParams.get("register")
+    );
+
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  const [formData, setFormData] =
+    useState({
+      email: "",
+      username: "",
+      password: "",
+      fullName: "",
+    });
+
+  // =========================
+  // AUTO REDIRECT IF LOGGED IN
+  // =========================
 
   useEffect(() => {
-    if (getUser()) {
-      router.push("/");
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const token =
+      localStorage.getItem(
+        "access_token"
+      );
+
+    if (token) {
+      router.replace("/");
     }
   }, [router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // =========================
+  // SUBMIT
+  // =========================
+
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault();
+
     setLoading(true);
     setError(null);
-    
+
     try {
+      // ================= LOGIN =================
+
       if (isLogin) {
-        const response = await login(formData.email.trim(), formData.password);
-        localStorage.setItem("access_token", response.access_token);
-        localStorage.setItem("refresh_token", response.refresh_token);
-        localStorage.setItem("user", JSON.stringify(response.user));
-        toast.success("✅ Logged in successfully!");
-        router.push("/");
-        router.refresh();
-      } else {
+        const response =
+          await login(
+            formData.email.trim(),
+            formData.password
+          );
+
+        // SAVE AUTH
+        localStorage.setItem(
+          "access_token",
+          response.access_token
+        );
+
+        localStorage.setItem(
+          "refresh_token",
+          response.refresh_token
+        );
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify(
+            response.user
+          )
+        );
+
+        toast.success(
+          "✅ Logged in successfully!"
+        );
+
+        // HARD REDIRECT
+        window.location.href = "/";
+      }
+
+      // ================= REGISTER =================
+
+      else {
         await register(
           formData.email.trim(),
           formData.password,
-          formData.username.trim() || undefined,
-          formData.fullName.trim() || undefined
+          formData.username.trim() ||
+            undefined,
+          formData.fullName.trim() ||
+            undefined
         );
-        toast.success("✅ Account created! Please login.");
+
+        toast.success(
+          "✅ Account created! Please login."
+        );
+
         setIsLogin(true);
-        setFormData({ email: "", username: "", password: "", fullName: "" });
+
+        setFormData({
+          email: "",
+          username: "",
+          password: "",
+          fullName: "",
+        });
       }
+
     } catch (err: any) {
-      console.error("Auth error:", err);
-      let errorMsg = isLogin ? "Login failed" : "Registration failed";
-      if (err.response?.data?.detail) {
-        const detail = err.response.data.detail;
-        errorMsg = typeof detail === "string" ? detail : JSON.stringify(detail);
+      console.error(
+        "Auth error:",
+        err
+      );
+
+      let errorMsg = isLogin
+        ? "Login failed"
+        : "Registration failed";
+
+      if (
+        err.response?.data?.detail
+      ) {
+        const detail =
+          err.response.data.detail;
+
+        errorMsg =
+          typeof detail === "string"
+            ? detail
+            : JSON.stringify(
+                detail
+              );
+
       } else if (err.message) {
         errorMsg = err.message;
       }
-      setError(String(errorMsg).slice(0, 300));
+
+      setError(
+        String(errorMsg).slice(
+          0,
+          300
+        )
+      );
+
       toast.error(errorMsg);
+
     } finally {
       setLoading(false);
     }
   };
 
+  // =========================
+  // UI
+  // =========================
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-purple-50 to-white flex items-center justify-center p-4">
+
       <div className="w-full max-w-md">
+
+        {/* HEADER */}
+
         <div className="text-center mb-8">
+
           <div className="flex items-center justify-center gap-2 mb-2">
+
             <div className="p-2 bg-purple-100 rounded-lg">
               <Sparkles className="h-6 w-6 text-purple-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">YouTube SEO Studio</h1>
+
+            <h1 className="text-2xl font-bold text-gray-900">
+              YouTube SEO Studio
+            </h1>
+
           </div>
+
           <p className="text-gray-600">
-            {isLogin ? "Welcome back to LearningWithAhad tools" : "Create your account"}
+            {isLogin
+              ? "Welcome back to LearningWithAhad tools"
+              : "Create your account"}
           </p>
+
         </div>
 
+        {/* CARD */}
+
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
+
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4"
+          >
+
+            {/* REGISTER FIELDS */}
+
             {!isLogin && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name
+                  </label>
+
                   <input
                     type="text"
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
                     placeholder="John Doe"
-                    value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    value={
+                      formData.fullName
+                    }
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        fullName:
+                          e.target.value,
+                      })
+                    }
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Username (optional)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Username (optional)
+                  </label>
+
                   <input
                     type="text"
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
                     placeholder="johndoe"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    value={
+                      formData.username
+                    }
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        username:
+                          e.target.value,
+                      })
+                    }
                   />
                 </div>
               </>
             )}
-            
+
+            {/* EMAIL */}
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email Address *
+              </label>
+
               <input
                 type="email"
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
                 placeholder="you@example.com"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    email:
+                      e.target.value,
+                  })
+                }
               />
             </div>
-            
+
+            {/* PASSWORD */}
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password *
+              </label>
+
               <div className="relative">
+
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
                   required
                   minLength={8}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none pr-10"
                   placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  value={
+                    formData.password
+                  }
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      password:
+                        e.target.value,
+                    })
+                  }
                 />
+
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() =>
+                    setShowPassword(
+                      !showPassword
+                    )
+                  }
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
+
               </div>
-              {!isLogin && <p className="text-xs text-gray-500 mt-1">Min 8 characters with uppercase, lowercase, and number</p>}
+
+              {!isLogin && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Min 8 characters
+                </p>
+              )}
             </div>
-            
+
+            {/* ERROR */}
+
             {error && (
               <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+
                 <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
-                <p className="text-sm text-red-700">{error}</p>
+
+                <p className="text-sm text-red-700">
+                  {error}
+                </p>
+
               </div>
             )}
-            
+
+            {/* BUTTON */}
+
             <button
               type="submit"
-              disabled={loading || !formData.email || !formData.password}
+              disabled={
+                loading ||
+                !formData.email ||
+                !formData.password
+              }
               className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition flex items-center justify-center gap-2 font-medium"
             >
               {loading ? (
-                <><Loader2 className="h-5 w-5 animate-spin" /> Processing...</>
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Processing...
+                </>
               ) : (
-                <>{isLogin ? "Sign In" : "Create Account"}</>
+                <>
+                  {isLogin
+                    ? "Sign In"
+                    : "Create Account"}
+                </>
               )}
             </button>
+
           </form>
-          
+
+          {/* TOGGLE */}
+
           <div className="mt-6 pt-6 border-t border-gray-100 text-center">
+
             <button
               type="button"
               onClick={() => {
                 setIsLogin(!isLogin);
+
                 setError(null);
-                setFormData({ email: "", username: "", password: "", fullName: "" });
+
+                setFormData({
+                  email: "",
+                  username: "",
+                  password: "",
+                  fullName: "",
+                });
               }}
               className="text-sm text-purple-600 hover:text-purple-700 font-medium"
             >
-              {isLogin ? "Need an account? Sign up" : "Have an account? Sign in"}
+              {isLogin
+                ? "Need an account? Sign up"
+                : "Have an account? Sign in"}
             </button>
+
           </div>
         </div>
-        
+
+        {/* FOOTER */}
+
         <p className="text-center text-xs text-gray-400 mt-6">
           Built for LearningWithAhad • Secure JWT authentication
         </p>
+
       </div>
     </main>
   );
 }
 
-// Main page component with Suspense boundary
+// =========================
+// PAGE WRAPPER
+// =========================
+
 export default function Login() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-50 to-white">
-        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-50 to-white">
+          <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );
