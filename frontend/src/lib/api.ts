@@ -103,11 +103,12 @@ export async function login(
       res.data.refresh_token
     );
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify(res.data.user)
-    );
-  }
+    if (res.data.user) {
+  localStorage.setItem(
+    "user",
+    JSON.stringify(res.data.user)
+  );
+}
 
   return res.data;
 }
@@ -169,25 +170,15 @@ export function getUser() {
   }
 
   try {
-    const user =
-      localStorage.getItem("user");
+    const user = localStorage.getItem("user");
 
-    // Prevent undefined/null crash
-    if (
-      !user ||
-      user === "undefined" ||
-      user === "null"
-    ) {
+    if (!user || user === "undefined") {
       return null;
     }
 
     return JSON.parse(user);
-
   } catch (error) {
-    console.error(
-      "Invalid user JSON:",
-      error
-    );
+    console.error("Invalid user JSON");
 
     localStorage.removeItem("user");
 
