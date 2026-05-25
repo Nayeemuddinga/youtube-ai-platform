@@ -168,10 +168,31 @@ export function getUser() {
     return null;
   }
 
-  const user =
-    localStorage.getItem("user");
+  try {
+    const user =
+      localStorage.getItem("user");
 
-  return user ? JSON.parse(user) : null;
+    // Prevent undefined/null crash
+    if (
+      !user ||
+      user === "undefined" ||
+      user === "null"
+    ) {
+      return null;
+    }
+
+    return JSON.parse(user);
+
+  } catch (error) {
+    console.error(
+      "Invalid user JSON:",
+      error
+    );
+
+    localStorage.removeItem("user");
+
+    return null;
+  }
 }
 
 export function logout() {
