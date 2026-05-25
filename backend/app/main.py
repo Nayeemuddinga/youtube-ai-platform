@@ -26,8 +26,10 @@ async def lifespan(app: FastAPI):
     logger.info("👋 Application shutdown complete")
 
 app = FastAPI(title="YouTube AI Platform", version="0.4.0", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins="https://youtube-ai-platform-jade.vercel.app",
-        "http://localhost:3000", allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, 
+                   allow_origins=["https://youtube-ai-platform-jade.vercel.app",
+        "http://localhost:3000"], 
+        allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 app.include_router(api_router, prefix="/api/v1")
