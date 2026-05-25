@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 import {
   generateSEO,
@@ -9,16 +8,6 @@ import {
 } from '@/lib/api';
 
 export default function HomePage() {
-  const router = useRouter();
-
-  // =========================
-  // STATE
-  // =========================
-
-  const [user, setUser] =
-  useState<any | undefined>(
-    undefined
-  );
 
   const [topic, setTopic] =
     useState('');
@@ -31,48 +20,6 @@ export default function HomePage() {
 
   const [result, setResult] =
     useState<any>(null);
-
-  // =========================
-  // AUTH CHECK
-  // =========================
-
-  useEffect(() => {
-    if (
-      typeof window === 'undefined'
-    ) {
-      return;
-    }
-
-    const token =
-      localStorage.getItem(
-        'access_token'
-      );
-
-    const userData =
-      localStorage.getItem('user');
-
-    // NOT LOGGED IN
-    if (!token || !userData) {
-      router.replace('/login');
-      return;
-    }
-
-    try {
-      const parsedUser =
-        JSON.parse(userData);
-
-      setUser(parsedUser);
-
-    } catch (err) {
-
-      console.error(err);
-
-      localStorage.clear();
-
-      router.replace('/login');
-    }
-
-  }, [router]);
 
   // =========================
   // GENERATE SEO
@@ -109,18 +56,6 @@ export default function HomePage() {
   };
 
   // =========================
-  // LOADING SCREEN
-  // =========================
-
-  if (user === undefined) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-      </div>
-    );
-  }
-
-  // =========================
   // PAGE
   // =========================
 
@@ -140,13 +75,7 @@ export default function HomePage() {
             </h1>
 
             <p className="text-gray-500 mt-1">
-              Welcome{' '}
-              {
-                user?.full_name ||
-                user?.username ||
-                user?.email ||
-                'User'
-              }
+              AI Powered YouTube Growth
             </p>
 
           </div>
@@ -176,8 +105,6 @@ export default function HomePage() {
 
           <div className="space-y-6">
 
-            {/* TOPIC */}
-
             <div>
 
               <label className="block text-sm font-medium mb-2">
@@ -193,12 +120,10 @@ export default function HomePage() {
                     e.target.value
                   )
                 }
-                className="w-full border border-gray-300 rounded-xl px-4 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full border border-gray-300 rounded-xl px-4 py-4 text-lg"
               />
 
             </div>
-
-            {/* AUDIENCE */}
 
             <div>
 
@@ -215,12 +140,10 @@ export default function HomePage() {
                     e.target.value
                   )
                 }
-                className="w-full border border-gray-300 rounded-xl px-4 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full border border-gray-300 rounded-xl px-4 py-4 text-lg"
               />
 
             </div>
-
-            {/* BUTTON */}
 
             <button
               onClick={handleGenerate}
@@ -229,7 +152,7 @@ export default function HomePage() {
                 !topic ||
                 !audience
               }
-              className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-8 py-4 rounded-xl text-lg transition"
+              className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-8 py-4 rounded-xl text-lg"
             >
               {
                 loading
@@ -250,89 +173,15 @@ export default function HomePage() {
                 SEO Results
               </h3>
 
-              {/* TITLE */}
-
-              <div className="mb-8">
-
-                <h4 className="text-lg font-semibold mb-2">
-                  SEO Title
-                </h4>
-
-                <div className="bg-gray-50 border rounded-xl p-4">
-                  {
-                    result?.seo_title ||
-                    'No title generated'
-                  }
-                </div>
-
-              </div>
-
-              {/* DESCRIPTION */}
-
-              <div className="mb-8">
-
-                <h4 className="text-lg font-semibold mb-2">
-                  Description
-                </h4>
-
-                <div className="bg-gray-50 border rounded-xl p-4 whitespace-pre-wrap">
-                  {
-                    result?.seo_description ||
-                    'No description generated'
-                  }
-                </div>
-
-              </div>
-
-              {/* KEYWORDS */}
-
-              <div className="mb-8">
-
-                <h4 className="text-lg font-semibold mb-3">
-                  Keywords
-                </h4>
-
-                <div className="flex flex-wrap gap-2">
-
-                  {
-                    result?.keywords?.map(
-                      (
-                        keyword: string,
-                        index: number
-                      ) => (
-                        <span
-                          key={index}
-                          className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm"
-                        >
-                          {keyword}
-                        </span>
-                      )
-                    )
-                  }
-
-                </div>
-
-              </div>
-
-              {/* RAW JSON */}
-
-              <div>
-
-                <h4 className="text-lg font-semibold mb-3">
-                  Full Response
-                </h4>
-
-                <pre className="bg-black text-green-400 rounded-xl p-6 overflow-auto text-sm">
-                  {
-                    JSON.stringify(
-                      result,
-                      null,
-                      2
-                    )
-                  }
-                </pre>
-
-              </div>
+              <pre className="bg-black text-green-400 rounded-xl p-6 overflow-auto text-sm">
+                {
+                  JSON.stringify(
+                    result,
+                    null,
+                    2
+                  )
+                }
+              </pre>
 
             </div>
 
