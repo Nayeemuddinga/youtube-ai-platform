@@ -1,6 +1,6 @@
 import axios from "axios";
 
-// ==================== API CONFIG ====================
+// ================= API CONFIG =================
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -15,12 +15,11 @@ export const api = axios.create({
   timeout: 30000,
 });
 
-// ==================== REQUEST INTERCEPTOR ====================
+// ================= REQUEST INTERCEPTOR =================
 
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const token =
-      localStorage.getItem("access_token");
+    const token = localStorage.getItem("access_token");
 
     // Skip auth routes
     if (
@@ -35,10 +34,11 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ==================== RESPONSE INTERCEPTOR ====================
+// ================= RESPONSE INTERCEPTOR =================
 
 api.interceptors.response.use(
   (response) => response,
+
   (error) => {
     console.error(
       "API ERROR:",
@@ -67,9 +67,8 @@ api.interceptors.response.use(
   }
 );
 
-// ==================== AUTH FUNCTIONS ====================
+// ================= LOGIN =================
 
-// LOGIN
 export async function login(
   username: string,
   password: string
@@ -93,6 +92,7 @@ export async function login(
 
   // Save auth data
   if (typeof window !== "undefined") {
+
     localStorage.setItem(
       "access_token",
       res.data.access_token
@@ -104,16 +104,18 @@ export async function login(
     );
 
     if (res.data.user) {
-  localStorage.setItem(
-    "user",
-    JSON.stringify(res.data.user)
-  );
-}
+      localStorage.setItem(
+        "user",
+        JSON.stringify(res.data.user)
+      );
+    }
+  }
 
   return res.data;
 }
 
-// REGISTER
+// ================= REGISTER =================
+
 export async function register(
   email: string,
   password: string,
@@ -133,7 +135,7 @@ export async function register(
   return res.data;
 }
 
-// ==================== SEO FUNCTIONS ====================
+// ================= SEO =================
 
 export async function generateSEO(
   topic: string,
@@ -141,7 +143,7 @@ export async function generateSEO(
   key_points: string[] = []
 ) {
   const res = await api.post(
-    "/api/v1/seo/optimize",
+    "/api/v1/optimize",
     {
       topic,
       target_audience,
@@ -152,7 +154,7 @@ export async function generateSEO(
   return res.data;
 }
 
-// ==================== AUTH UTILS ====================
+// ================= AUTH UTILS =================
 
 export function getAuthToken() {
   if (typeof window === "undefined") {
@@ -170,15 +172,23 @@ export function getUser() {
   }
 
   try {
-    const user = localStorage.getItem("user");
+    const user =
+      localStorage.getItem("user");
 
-    if (!user || user === "undefined") {
+    if (
+      !user ||
+      user === "undefined"
+    ) {
       return null;
     }
 
     return JSON.parse(user);
+
   } catch (error) {
-    console.error("Invalid user JSON");
+
+    console.error(
+      "Invalid user JSON"
+    );
 
     localStorage.removeItem("user");
 
@@ -208,7 +218,7 @@ export function isAuthenticated() {
   return !!getAuthToken();
 }
 
-// ==================== AUTH HOOK ====================
+// ================= AUTH HOOK =================
 
 export function useAuth() {
   return {
