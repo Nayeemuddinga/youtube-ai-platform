@@ -12,20 +12,31 @@ import {
 export default function HomePage() {
   const router = useRouter();
 
-  const [topic, setTopic] = useState('');
-  const [audience, setAudience] = useState('');
+  const [mounted, setMounted] =
+    useState(false);
 
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] =
+    useState<any>(null);
 
-  const [result, setResult] = useState<any>(null);
+  const [topic, setTopic] =
+    useState('');
 
-  const [user, setUser] = useState<any>(null);
+  const [audience, setAudience] =
+    useState('');
 
-  // ===============================
-  // AUTH CHECK
-  // ===============================
+  const [loading, setLoading] =
+    useState(false);
+
+  const [result, setResult] =
+    useState<any>(null);
+
+  // ============================
+  // CLIENT MOUNT
+  // ============================
 
   useEffect(() => {
+    setMounted(true);
+
     const storedUser = getUser();
 
     if (!storedUser) {
@@ -34,60 +45,75 @@ export default function HomePage() {
     }
 
     setUser(storedUser);
+
   }, [router]);
 
-  // ===============================
-  // GENERATE SEO
-  // ===============================
+  // ============================
+  // SEO GENERATOR
+  // ============================
 
-  const handleGenerate = async () => {
+  const handleGenerate =
+    async () => {
+
     try {
+
       setLoading(true);
 
-      const res = await generateSEO(
-        topic,
-        audience
-      );
+      const res =
+        await generateSEO(
+          topic,
+          audience
+        );
 
       setResult(res);
+
     } catch (err) {
+
       console.error(err);
-      alert('Failed to generate SEO');
+
+      alert(
+        'SEO generation failed'
+      );
+
     } finally {
+
       setLoading(false);
     }
   };
 
-  // ===============================
-  // LOADING
-  // ===============================
+  // ============================
+  // HYDRATION FIX
+  // ============================
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600"></div>
-      </div>
-    );
+  if (!mounted) {
+    return null;
   }
 
-  // ===============================
-  // PAGE
-  // ===============================
+  // ============================
+  // MAIN PAGE
+  // ============================
 
   return (
     <div className="min-h-screen bg-gray-100">
 
       {/* HEADER */}
 
-      <header className="bg-white border-b px-8 py-4 flex items-center justify-between">
+      <header className="bg-white border-b px-8 py-5 flex items-center justify-between">
+
         <div>
+
           <h1 className="text-4xl font-bold">
             YouTube SEO Studio
           </h1>
 
           <p className="text-gray-500 mt-1">
-            Welcome {user?.full_name || user?.email}
+            Welcome {
+              user?.full_name ||
+              user?.email ||
+              'User'
+            }
           </p>
+
         </div>
 
         <button
@@ -96,6 +122,7 @@ export default function HomePage() {
         >
           Logout
         </button>
+
       </header>
 
       {/* MAIN */}
@@ -135,9 +162,11 @@ export default function HomePage() {
               disabled={loading}
               className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-xl text-lg"
             >
-              {loading
-                ? 'Generating...'
-                : 'Generate SEO'}
+              {
+                loading
+                  ? 'Generating...'
+                  : 'Generate SEO'
+              }
             </button>
 
           </div>
@@ -145,40 +174,47 @@ export default function HomePage() {
           {/* RESULTS */}
 
           {result && (
+
             <div className="mt-10 border-t pt-8">
 
               <h3 className="text-2xl font-bold mb-6">
                 SEO Results
               </h3>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
 
                 <div>
-                  <h4 className="font-bold">
+
+                  <h4 className="font-bold text-lg">
                     Title
                   </h4>
 
                   <p>
                     {result?.seo_title}
                   </p>
+
                 </div>
 
                 <div>
-                  <h4 className="font-bold">
+
+                  <h4 className="font-bold text-lg">
                     Description
                   </h4>
 
                   <p>
                     {result?.seo_description}
                   </p>
+
                 </div>
 
                 <div>
-                  <h4 className="font-bold">
+
+                  <h4 className="font-bold text-lg">
                     Keywords
                   </h4>
 
-                  <div className="flex flex-wrap gap-2 mt-2">
+                  <div className="flex flex-wrap gap-2 mt-3">
+
                     {result?.keywords?.map(
                       (
                         keyword: string,
@@ -192,12 +228,15 @@ export default function HomePage() {
                         </span>
                       )
                     )}
+
                   </div>
+
                 </div>
 
               </div>
 
             </div>
+
           )}
 
         </div>
