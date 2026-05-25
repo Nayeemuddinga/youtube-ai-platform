@@ -1,184 +1,156 @@
-import axios from "axios";
+"use client";
 
-// ==================== API CONFIG ====================
+import { useState } from "react";
+import Link from "next/link";
+import { login } from "@/lib/api";
 
-// Railway backend URL
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://youtube-ai-platform-production.up.railway.app";
+export default function LoginPage() {
+  const [email, setEmail] =
+    useState("");
 
-// Create axios instance
-export const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  timeout: 30000,
-});
+  const [password, setPassword] =
+    useState("");
 
-// ==================== REQUEST INTERCEPTOR ====================
+  const [loading, setLoading] =
+    useState(false);
 
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("access_token");
+  const [error, setError] =
+    useState("");
 
-    // Skip auth routes
-    if (token && !config.url?.includes("/auth/")) {
-      config.headers.Authorization = `Bearer ${token}`;
+  // =========================
+  // LOGIN HANDLER
+  // =========================
+
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+      setError("");
+
+      // LOGIN API CALL
+      const data = await login(
+        email,
+        password
+      );
+
+      console.log(
+        "LOGIN SUCCESS:",
+        data
+      );
+
+      // REDIRECT TO DASHBOARD
+      window.location.href =
+        "/dashboard";
+
+    } catch (err: any) {
+      console.error(err);
+
+      setError(
+        err?.response?.data?.detail ||
+          "Login failed"
+      );
+    } finally {
+      setLoading(false);
     }
-  }
-
-  return config;
-});
-
-// ==================== RESPONSE INTERCEPTOR ====================
-
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("API ERROR:", error?.response || error);
-
-    // Auto logout on 401
-    if (
-      error.response?.status === 401 &&
-      typeof window !== "undefined"
-    ) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      localStorage.removeItem("user");
-
-      window.location.href = "/login";
-    }
-
-    return Promise.reject(error);
-  }
-);
-
-// ==================== AUTH FUNCTIONS ====================
-
-// LOGIN
-export async function login(
-  username: string,
-  password: string
-) {
-  const params = new URLSearchParams();
-
-  params.append("username", username);
-  params.append("password", password);
-
-  const res = await api.post(
-    "/api/v1/auth/login",
-    params,
-    {
-      headers: {
-        "Content-Type":
-          "application/x-www-form-urlencoded",
-      },
-    }
-  );
-
-  // Save tokens + user
-  if (typeof window !== "undefined") {
-    localStorage.setItem(
-      "access_token",
-      res.data.access_token
-    );
-
-    localStorage.setItem(
-      "refresh_token",
-      res.data.refresh_token
-    );
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify(res.data.user)
-    );
-  }
-
-  return res.data;
-}
-
-// REGISTER
-export async function register(
-  email: string,
-  password: string,
-  username?: string,
-  full_name?: string
-) {
-  const res = await api.post(
-    "/api/v1/auth/register",
-    {
-      email,
-      password,
-      username,
-      full_name,
-    }
-  );
-
-  return res.data;
-}
-
-// ==================== SEO FUNCTIONS ====================
-
-export async function generateSEO(
-  topic: string,
-  target_audience: string,
-  key_points: string[] = []
-) {
-  const res = await api.post(
-    "/api/v1/seo/optimize",
-    {
-      topic,
-      target_audience,
-      key_points,
-    }
-  );
-
-  return res.data;
-}
-
-// ==================== AUTH UTILS ====================
-
-export function getAuthToken() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  return localStorage.getItem("access_token");
-}
-
-export function getUser() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const userStr = localStorage.getItem("user");
-
-  return userStr ? JSON.parse(userStr) : null;
-}
-
-export function logout() {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
-  localStorage.removeItem("user");
-
-  window.location.href = "/login";
-}
-
-export function isAuthenticated() {
-  return !!getAuthToken();
-}
-
-// ==================== AUTH HOOK ====================
-
-export function useAuth() {
-  return {
-    user: getUser(),
-    token: getAuthToken(),
-    isAuthenticated: isAuthenticated(),
   };
+
+  // =========================
+  // UI
+  // =========================
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+
+        {/* HEADER */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold">
+            YouTube SEO Studio
+          </h1>
+
+          <p className="text-gray-500 mt-2">
+            Welcome back to
+            LearningWithAhad tools
+          </p>
+        </div>
+
+        {/* FORM */}
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6"
+        >
+
+          {/* EMAIL */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Email Address *
+            </label>
+
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) =>
+                setEmail(e.target.value)
+              }
+              className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="name@example.com"
+            />
+          </div>
+
+          {/* PASSWORD */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Password *
+            </label>
+
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
+              className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="••••••••"
+            />
+          </div>
+
+          {/* ERROR */}
+          {error && (
+            <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {/* BUTTON */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold transition"
+          >
+            {loading
+              ? "Signing In..."
+              : "Sign In"}
+          </button>
+        </form>
+
+        {/* FOOTER */}
+        <div className="mt-6 text-center">
+          <p className="text-gray-500">
+            Need an account?{" "}
+            <Link
+              href="/register"
+              className="text-purple-600 hover:underline"
+            >
+              Sign up
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
