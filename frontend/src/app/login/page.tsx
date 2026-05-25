@@ -14,7 +14,7 @@ import {
   Copy,
   LogOut,
   Sparkles,
-  Youtube,
+  YoutubeIcon,
   BarChart3,
   Hash,
   FileText,
@@ -271,7 +271,7 @@ ${result?.cta?.join("\n")}
           <div className="flex items-center gap-4">
 
             <div className="bg-purple-100 p-3 rounded-xl">
-              <Youtube className="h-7 w-7 text-purple-600" />
+              <YoutubeIcon className="h-7 w-7 text-purple-600" />
             </div>
 
             <div>
